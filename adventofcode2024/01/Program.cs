@@ -9,7 +9,8 @@ foreach (var line in lines)
     rightList.Add(int.Parse(line[8..]));
 }
 
-CalculateSimilarity();
+var similarity = CalculateSimilarity();
+Console.WriteLine("Similarity: " + similarity);
 
 for (int i = 0; i < 1000; i++)
 {
@@ -33,5 +34,11 @@ Console.WriteLine(totalDistance);
 
 double CalculateSimilarity()
 {
-    
+    var similarity = 0.0;
+    foreach (var item in leftList)
+    {
+        var occurrences = rightList.FindAll(x => x == item);
+        similarity += item * occurrences.Count;
+    }
+    return similarity;
 }
