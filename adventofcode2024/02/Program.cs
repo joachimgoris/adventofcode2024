@@ -5,11 +5,14 @@ Console.WriteLine(CalculateSafeReports(reports));
 List<Report> ProcessInput(string[] input)
 {
     var reports = new List<Report>();
+    var occurrences = 0;
     foreach (var line in input)
     {
         var individualLevels = line.Split(' ');
         reports.Add(new Report(individualLevels.Select(x => int.Parse(x)).ToList()));
+        occurrences++;
     }
+    Console.WriteLine("Occurrences: " + occurrences);
 
     return reports;
 }
@@ -19,50 +22,72 @@ int CalculateSafeReports(List<Report> reports)
     int safeReports = 0;
     foreach (var report in reports)
     {
-        var (isAllIncreasing, isDeleted) = AllIncreasing(report.Levels);
-        if (AllIncreasing(report.Levels).Item1 || AllDecreasing(report.Levels).Item1)
+        if (CalculateSafeReportWithVariants(report.Levels))
         {
-            if (AdjacentDifferAtleastOneOrAtMostThree(report.Levels))
-            {
-                safeReports++;
-            }
+            safeReports++;
         }
     }
     return safeReports;
 }
 
-(bool, bool) AllIncreasing(List<int> levels)
+bool CalculateSafeReportWithVariants(List<int> levels)
+{
+    if (CalculateSafeReport(levels))
+    {
+        return true;
+    }
+    return TryWithVariants(levels);
+}
+
+bool CalculateSafeReport(List<int> levels)
+{
+    if (AllIncreasing(levels) || AllDecreasing(levels))
+    {
+        if (AdjacentDifferAtleastOneOrAtMostThree(levels))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool TryWithVariants(List<int> levels)
+{
+    List<int> copy = new List<int>(levels);
+    for (int i = 0; i < levels.Count; i++)
+    {
+        copy.RemoveAt(i);
+        if (CalculateSafeReport(copy))
+        {
+            return true;
+        }
+        copy = new List<int>(levels);
+    }
+    return false;
+}
+
+bool AllIncreasing(List<int> levels)
 {
     for (int i = 0; i < levels.Count - 1; i++)
     {
         if (levels[i] >= levels[i + 1])
         {
-            if (i + 2 < levels.Count && levels[i] >= levels[i + 2])
-            {
-                return (false, false);
-            }
-            levels.RemoveAt(i + 1);
-            return (true, true);
+            return false;
         }
     }
-    return (true, false);
+    return true;
 }
 
-(bool, bool) AllDecreasing(List<int> levels)
+bool AllDecreasing(List<int> levels)
 {
     for (int i = 0; i < levels.Count - 1; i++)
     {
         if (levels[i] <= levels[i + 1])
         {
-            if (i + 2 < levels.Count && levels[i] <= levels[i + 2])
-            {
-                return (false, false);
-            }
-            levels.RemoveAt(i + 1);
-            return (true, true);
+            return false;
         }
     }
-    return (true, false);
+    return true;
 }
 
 bool AdjacentDifferAtleastOneOrAtMostThree(List<int> levels)
@@ -81,11 +106,7 @@ bool AdjacentDifferAtleastOneOrAtMostThree(List<int> levels)
     return true;
 }
 
-class Report
+class Report(List<int> levels)
 {
-    public Report(List<int> levels)
-    {
-        Levels = levels;
-    }
-    public List<int> Levels { get; set; }
+    public List<int> Levels { get; set; } = levels;
 }
